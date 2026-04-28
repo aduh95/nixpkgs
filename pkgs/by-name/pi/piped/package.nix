@@ -22,6 +22,7 @@ buildNpmPackage rec {
   };
 
   nativeBuildInputs = [ pnpm_9 ];
+  buildInputs = [ pnpm_9.nodejs-slim.npm ];
   npmConfigHook = pnpmConfigHook;
 
   installPhase = ''

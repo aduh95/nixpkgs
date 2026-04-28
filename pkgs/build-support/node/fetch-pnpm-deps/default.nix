@@ -52,9 +52,18 @@ in
       filterFlags = lib.map (package: "--filter=${package}") pnpmWorkspaces;
 
       pnpm-fixup-state-db' =
-        if pnpm.nodejs or null != null then
+        if pnpm.nodejs-slim or null != null then
           pnpm-fixup-state-db.override {
-            inherit (pnpm) nodejs;
+            nodejs =
+              let
+                inherit (pnpm) nodejs-slim;
+              in
+              if nodejs-slim.npm or null != null then
+                pnpm-fixup-state-db.nodejs.override {
+                  inherit nodejs-slim;
+                }
+              else
+                nodejs-slim;
           }
         else
           pnpm-fixup-state-db;

@@ -27,7 +27,10 @@ let
 
     sourceRoot = "${src.name}/frontend";
 
-    nativeBuildInputs = [ pnpm_10 ];
+    nativeBuildInputs = [
+      pnpm_10
+      nodejs_24
+    ];
     npmConfigHook = pnpmConfigHook;
     npmDeps = pnpmDeps;
     nodejs = nodejs_24;

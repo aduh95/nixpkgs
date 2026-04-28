@@ -6,13 +6,14 @@
   pnpmConfigHook,
   fetchurl,
   installShellFiles,
-  nodejs,
+  nodejs-slim,
   testers,
   buildPackages,
   bashNonInteractive,
   tests,
 
   withNode ? true,
+  withNPM ? false,
   version,
   hash,
 }:
@@ -30,13 +31,14 @@ stdenvNoCC.mkDerivation (finalAttrs: {
 
   nativeBuildInputs = [
     installShellFiles
-    nodejs
+    nodejs-slim
   ];
 
   buildInputs = [
     bashNonInteractive # needed for node-gyp wrapper script
   ]
-  ++ lib.optionals withNode [ nodejs ];
+  ++ lib.optional withNPM nodejs-slim.npm
+  ++ lib.optionals withNode [ nodejs-slim ];
 
   # Remove binary files from src, we don't need them, and this way we make sure
   # our distribution is free of binaryNativeCode
@@ -109,7 +111,7 @@ stdenvNoCC.mkDerivation (finalAttrs: {
               ];
             })
           );
-      inherit nodejs majorVersion;
+      inherit nodejs-slim majorVersion;
 
       tests = {
         inherit (tests) pnpm;
