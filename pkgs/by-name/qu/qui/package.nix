@@ -5,13 +5,19 @@
   stdenvNoCC,
   nixosTests,
   nix-update-script,
-  nodejs,
+  nodejs-slim_26,
   pnpm_11,
   fetchPnpmDeps,
   pnpmConfigHook,
   typescript,
   versionCheckHook,
 }:
+let
+  pnpm = pnpm_11.override {
+    # nodejs_24 on Darwin fails to build
+    nodejs-slim = nodejs-slim_26;
+  };
+in
 buildGo126Module (finalAttrs: {
   pname = "qui";
   version = "1.19.0";
@@ -27,9 +33,9 @@ buildGo126Module (finalAttrs: {
     inherit (finalAttrs) src version;
 
     nativeBuildInputs = [
-      nodejs
+      nodejs-slim_26
       pnpmConfigHook
-      pnpm_11
+      pnpm
       typescript
     ];
 
@@ -42,7 +48,7 @@ buildGo126Module (finalAttrs: {
         src
         sourceRoot
         ;
-      pnpm = pnpm_11;
+      inherit pnpm;
       fetcherVersion = 3;
       hash = "sha256-OEr5uyMnwP1TkSxRFNaopB9AAx2OVE7lNEzGyQwF6kc=";
     };
