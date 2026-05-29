@@ -1,6 +1,6 @@
 {
   stdenv,
-  nodejs,
+  nodejs-slim_26,
   fetchPnpmDeps,
   pnpmConfigHook,
   pnpm_11,
@@ -8,7 +8,10 @@
 }:
 
 let
-  pnpm = pnpm_11;
+  pnpm = pnpm_11.override {
+    # nodejs_24 on Darwin fails to build
+    nodejs-slim = nodejs-slim_26;
+  };
 
   inherit (import ./sources.nix { inherit fetchFromGitHub; })
     pname
@@ -24,7 +27,7 @@ stdenv.mkDerivation (finalAttrs: {
   sourceRoot = "${finalAttrs.src.name}/web";
 
   nativeBuildInputs = [
-    nodejs
+    nodejs-slim_26
     pnpmConfigHook
     pnpm
   ];

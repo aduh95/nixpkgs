@@ -1,7 +1,7 @@
 {
   lib,
   stdenv,
-  nodejs,
+  nodejs-slim_26,
   fetchPnpmDeps,
   pnpmConfigHook,
   pnpm_11,
@@ -12,7 +12,7 @@
   nixosTests,
   authelia-web ? callPackage ./web.nix {
     inherit
-      nodejs
+      nodejs-slim_26
       fetchPnpmDeps
       pnpmConfigHook
       pnpm_11
