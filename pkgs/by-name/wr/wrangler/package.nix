@@ -3,7 +3,7 @@
   stdenv,
   fetchFromGitHub,
   makeWrapper,
-  nodejs,
+  nodejs-slim_26,
   pnpm_10,
   fetchPnpmDeps,
   pnpmConfigHook,
@@ -17,6 +17,12 @@
   nix-update-script,
   versionCheckHook,
 }:
+let
+  pnpm = pnpm_10.override {
+    # nodejs_24 on Darwin fails to build
+    nodejs-slim = nodejs-slim_26;
+  };
+in
 stdenv.mkDerivation (finalAttrs: {
   pname = "wrangler";
   version = "4.93.0";
@@ -35,7 +41,7 @@ stdenv.mkDerivation (finalAttrs: {
       src
       postPatch
       ;
-    pnpm = pnpm_10;
+    inherit pnpm;
     fetcherVersion = 3;
     hash = "sha256-bc/L3bQl2BlcoqpTGBrFbGNl8IeRPoV65EVykAa8euA=";
   };
@@ -61,9 +67,9 @@ stdenv.mkDerivation (finalAttrs: {
 
   nativeBuildInputs = [
     makeWrapper
-    nodejs
+    nodejs-slim_26
     pnpmConfigHook
-    pnpm_10
+    pnpm
     jq
     moreutils
   ]
@@ -109,7 +115,7 @@ stdenv.mkDerivation (finalAttrs: {
     rm -rf node_modules/typescript node_modules/eslint node_modules/prettier node_modules/bin node_modules/.bin node_modules/**/bin node_modules/**/.bin
     rm -rf $out/lib/**/bin $out/lib/**/.bin
     NODE_PATH_ARRAY=( "$out/lib/node_modules" "$out/lib/packages/wrangler/node_modules" )
-    makeWrapper ${lib.getExe nodejs} $out/bin/wrangler \
+    makeWrapper ${lib.getExe nodejs-slim_26} $out/bin/wrangler \
       --inherit-argv0 \
       --prefix-each NODE_PATH : "$${NODE_PATH_ARRAY[@]}" \
       --add-flags $out/lib/packages/wrangler/bin/wrangler.js \
@@ -144,6 +150,6 @@ stdenv.mkDerivation (finalAttrs: {
     # other systems where precompiled binaries are not provided, but most
     # commands are will still work everywhere.
     # Potential improvements: build workerd from source instead.
-    inherit (nodejs.meta) platforms;
+    inherit (nodejs-slim_26.meta) platforms;
   };
 })
