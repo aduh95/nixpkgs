@@ -2,7 +2,7 @@
   lib,
   stdenv,
   fetchFromGitHub,
-  nodejs,
+  nodejs-slim_26,
   pnpm_9,
   fetchPnpmDeps,
   pnpmConfigHook,
@@ -13,6 +13,12 @@
   copyDesktopItems,
 }:
 
+let
+  pnpm = pnpm_9.override {
+    # nodejs_24 on Darwin fails to build
+    nodejs-slim = nodejs-slim_26;
+  };
+in
 stdenv.mkDerivation (finalAttrs: {
   pname = "aonsoku";
   version = "0.14.0";
@@ -31,14 +37,14 @@ stdenv.mkDerivation (finalAttrs: {
 
   pnpmDeps = fetchPnpmDeps {
     inherit (finalAttrs) pname version src;
-    pnpm = pnpm_9;
+    inherit pnpm;
     fetcherVersion = 3;
     hash = "sha256-oBwqYOx2KEtF0qdMKEIgdArZ4xs/AyeOqFoU4nHl3xY=";
   };
 
   nativeBuildInputs = [
-    nodejs
-    pnpm_9
+    nodejs-slim_26
+    pnpm
     pnpmConfigHook
     makeWrapper
     electron
