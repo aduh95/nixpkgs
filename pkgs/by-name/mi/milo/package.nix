@@ -1,30 +1,18 @@
 {
   lib,
   stdenv,
-  rustPlatform,
-  rustc,
-  cargo-make,
-  pnpm_11,
-  pnpmConfigHook,
-  fetchPnpmDeps,
-  cargo,
-  rust-cbindgen,
-  nodejs-slim_26,
   fetchFromGitHub,
+  rustPlatform,
+  rust-cbindgen,
   nix-update-script,
   testers,
   pkg-config,
   validatePkgConfig,
+  fetchurl,
   fetchpatch2,
 }:
 
-let
-  nodejs-slim = nodejs-slim_26;
-  pnpm = pnpm_11.override {
-    inherit nodejs-slim;
-  };
-in
-stdenv.mkDerivation (finalAttrs: {
+rustPlatform.buildRustPackage (finalAttrs: {
   pname = "milo";
   version = "0.6.0";
 
@@ -35,6 +23,12 @@ stdenv.mkDerivation (finalAttrs: {
     hash = "sha256-ZsB2HAg1uBognSSew0iKeVEJKHJQY3rzxORSkoSGhz4=";
   };
 
+  prePatch = "cp ${
+    fetchurl {
+      url = "https://github.com/ShogunPanda/milo/raw/1c28b75424d3918d8d0e31905e6dea1a45876597/scripts/postbuild-cpp.sh";
+      hash = "sha256-jnR+Q9WpwWRB6YIr6uO1FYHTwifuoxeinWDfnXFBy7s=";
+    }
+  } scripts/postbuild-cpp.sh";
   patches = [
     (fetchpatch2 {
       url = "https://github.com/ShogunPanda/milo/pull/17.patch";
@@ -46,40 +40,12 @@ stdenv.mkDerivation (finalAttrs: {
     })
   ];
 
-  pnpmDeps = fetchPnpmDeps {
-    inherit (finalAttrs) pname version src;
-    inherit pnpm;
-    fetcherVersion = 4;
-    hash = "sha256-gp6i175r+GAMhf2pPP6dfdx4RN868fLduCD0/FkdnpM=";
-  };
-
   cargoRoot = "parser";
   buildAndTestSubdir = "parser";
-  cargoBuildType = "release";
-  cargoDeps = rustPlatform.fetchCargoVendor {
-    inherit (finalAttrs)
-      pname
-      version
-      src
-      cargoRoot
-      ;
-    hash = "sha256-PcG4G7SYQhz73shhtLRQnUJ97hnHSPvRTKE/VzM53PI=";
-  };
-
-  __structuredAttrs = true;
-  strictDeps = true;
+  cargoHash = "sha256-PcG4G7SYQhz73shhtLRQnUJ97hnHSPvRTKE/VzM53PI=";
 
   nativeBuildInputs = [
-    cargo
-    rustPlatform.cargoSetupHook
-    rustPlatform.cargoBuildHook
-    rustPlatform.cargoInstallHook
-    rustc
-    cargo-make
     rust-cbindgen
-    nodejs-slim
-    pnpm
-    pnpmConfigHook
     validatePkgConfig
   ];
 
@@ -88,16 +54,10 @@ stdenv.mkDerivation (finalAttrs: {
   '';
 
   postBuild = ''
-    makers --cwd parser cpp:headers
-    mkdir -p dist/cpp/release
-    cp parser/target/headers/milo.h dist/cpp/release/.
-    node scripts/postbuild-cpp.js release
+    bash scripts/postbuild-cpp.sh $out/include/milo.h
   '';
 
   postInstall = ''
-    install -Dm644 -t $out/include \
-      dist/cpp/release/*.h
-
     mkdir $out/lib/pkgconfig
     cat -> $out/lib/pkgconfig/milo_parser.pc <<EOF
     prefix=$out
@@ -113,6 +73,7 @@ stdenv.mkDerivation (finalAttrs: {
     EOF
   '';
 
+  doCheck = true;
   doInstallCheck = true;
   nativeInstallCheckInputs = [
     stdenv.cc
